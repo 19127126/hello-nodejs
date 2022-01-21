@@ -2,10 +2,6 @@ pipeline{
 
 	agent any
 
-	environment {
-		DOCKERHUB_CREDENTIALS=credentials('dockerhub')
-	}
-
 	stages {
 	    
 	    stage('gitclone') {
@@ -15,32 +11,18 @@ pipeline{
 			}
 		}
 
-		stage('Build') {
+		stage('Build and Publish') {
 
 			steps {
-				sh 'docker build -t ductrung1512/nodeapp_test:latest .'
+				withDockerRegistry(credentialsId: 'dockerhub', url: 'https://index.docker.io/v1/') {
+					sh label: '', script: 'docker build -t ductrung1512/test:v1 .'
+					sh label: '', script: 'docker push ductrung1512/test:v1'
+				}
 			}
 		}
 
-		stage('Login') {
-
-			steps {
-				sh 'echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin'
-			}
-		}
-
-		stage('Push') {
-
-			steps {
-				sh 'docker push ductrung1512/nodeapp_test:latest'
-			}
-		}
+		
 	}
 
-	post {
-		always {
-			sh 'docker logout'
-		}
-	}
 
 }
