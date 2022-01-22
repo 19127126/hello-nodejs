@@ -1,39 +1,46 @@
-pipeline {
+pipeline{
 
-  environment {
-    dockerimagename = "dunglen15102001/indexPage"
-    dockerImage = ""
-  }
+	agent {label 'linux'}
 
-  agent any
+	environment {
+		DOCKERHUB_CREDENTIALS=credentials('dockerhub')
+	}
 
-  stages {
+	stages {
+	    
+	    stage('gitclone') {
 
-    stage('Checkout Source') {
-      steps {
-        git 'https://github.com/19127126/hello-nodejs.git'
-      }
-    }
+			steps {
+				git 'https://github.com/19127126/hello-nodejs.git'
+			}
+		}
 
-    stage('Build image') {
-      steps{
-        script {
-          dockerImage = docker.build dockerimagename
-        }
-      }
-    }
+		stage('Build') {
 
-    stage('Pushing Image') {
-      environment {
-               registryCredential = 'dockerhublogin'
-           }
-      steps{
-        script {
-          docker.withRegistry( 'https://registry.hub.docker.com', registryCredential ) {
-            dockerImage.push("latest")
-          }
-        }
-      }
-    }
-  }
+			steps {
+				sh 'docker build -t dunglen15102001/nodeapp_test:latest .'
+			}
+		}
+
+		stage('Login') {
+
+			steps {
+				sh 'echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin'
+			}
+		}
+
+		stage('Push') {
+
+			steps {
+				sh 'docker push dunglen15102001/nodeapp_test:latest'
+			}
+		}
+	}
+
+	post {
+		always {
+			sh 'docker logout'
+		}
+	}
+
 }
