@@ -1,7 +1,7 @@
 pipeline {
 
   environment {
-    dockerimagename = "19127126/indexPage"
+    dockerimagename = "dunglen15102001/indexPage"
     dockerImage = ""
   }
 
