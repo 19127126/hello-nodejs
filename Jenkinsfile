@@ -1,18 +1,38 @@
-pipeline{
+pipeline {
+
+  environment {
+    dockerimagename = "19127126/indexPage"
+    dockerImage = ""
+  }
+
   agent any
-    stages{
-        stage('Clone'){
-              steps{
-                  git 'https://github.com/19127126/hello-nodejs.git'
-              }
+
+  stages {
+
+    stage('Checkout Source') {
+      steps {
+        git 'https://github.com/19127126/hello-nodejs.git'
+      }
+    }
+
+    stage('Build image') {
+      steps{
+        script {
+          dockerImage = docker.build dockerimagename
         }
-        stage('Build image and push to Dockerhub'){
-              steps{
-                  withDockerRegistry(credentialsId: '9c641a07-a951-4715-a8f0-6e8ea7cb532b', url: 'https://index.docker.io/v1/') {
-    		      sh 'docker build -t dunglen15102001/test:v1 .'
-                      sh 'docker push dunglen15102001/test:v1 .'
-                  }
-              }
+      }
+    }
+
+    stage('Pushing Image') {
+      environment {
+               registryCredential = 'dockerhublogin'
+           }
+      steps{
+        script {
+          docker.withRegistry( 'https://registry.hub.docker.com', registryCredential ) {
+            dockerImage.push("latest")
+          }
         }
+      }
     }
 }
